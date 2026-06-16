@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 
@@ -6,7 +7,9 @@ from .forms import DepartmentForm
 
 from django.http import JsonResponse
 
-# List all departments
+
+@login_required
+@permission_required('departments.view_department', raise_exception=True)
 def department_list(request):
 
     departments = Department.objects.all()
@@ -20,7 +23,8 @@ def department_list(request):
     )
 
 
-# Create a new department
+@login_required
+@permission_required('departments.add_department', raise_exception=True)
 def department_create(request):
 
     form = DepartmentForm()
@@ -33,7 +37,9 @@ def department_create(request):
         }
     )
 
-#create with ajax
+
+@login_required
+@permission_required('departments.add_department', raise_exception=True)
 def department_ajax_create(request):
 
     if request.method == 'POST':
@@ -65,7 +71,9 @@ def department_ajax_create(request):
         'status': 'invalid'
     })
 
-#update with ajax
+
+@login_required
+@permission_required('departments.change_department', raise_exception=True)
 def department_ajax_update(request, pk):
 
     if request.method == 'POST':
@@ -109,7 +117,9 @@ def department_ajax_update(request, pk):
         'status': 'invalid'
     })
 
-#delete with ajax
+
+@login_required
+@permission_required('departments.delete_department', raise_exception=True)
 def department_ajax_delete(request, pk):
 
     if request.method == 'POST':
@@ -127,6 +137,8 @@ def department_ajax_delete(request, pk):
     })
 
 
+@login_required
+@permission_required('departments.change_department', raise_exception=True)
 def department_ajax_detail(request, pk):
 
     department = get_object_or_404(

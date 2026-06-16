@@ -1,9 +1,11 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from students.models import Student
 from departments.models import Department
 from skills.models import Skill
 
 
+@login_required
 def dashboard(request):
 
     context = {

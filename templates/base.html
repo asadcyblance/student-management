@@ -22,19 +22,51 @@
                 SMS
             </h4>
 
-            <a href="{% url 'dashboard' %}" class="{% if request.path == '/' %}active{% endif %}">Dashboard</a>
+            {% if user.is_authenticated %}
+                <div class="text-white px-3 pb-2">
+                    <small>Hello, {{ user.username }}</small>
+                    {% if user.is_superuser %}
+                        <br><small class="text-warning">Superuser</small>
+                    {% elif user.groups.all %}
+                        <br><small class="text-info">{{ user.groups.first.name }}</small>
+                    {% endif %}
+                </div>
 
-            <a href="{% url 'student_list' %}" class="{% if '/students/' in request.path %}active{% endif %}">
-                Students
-            </a>
+                <a href="{% url 'dashboard' %}" class="{% if request.path == '/' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
 
-            <a href="{% url 'department_list' %}" class="{% if '/departments/' in request.path %}active{% endif %}">
-                Departments
-            </a>
+                {% if perms.students.view_student %}
+                <a href="{% url 'student_list' %}" class="{% if '/students/' in request.path %}active{% endif %}">
+                    <i class="bi bi-people"></i> Students
+                </a>
+                {% endif %}
 
-            <a href="{% url 'skill_list' %}" class="{% if '/skills/' in request.path %}active{% endif %}">
-                Skills
-            </a>
+                {% if perms.departments.view_department %}
+                <a href="{% url 'department_list' %}" class="{% if '/departments/' in request.path %}active{% endif %}">
+                    <i class="bi bi-building"></i> Departments
+                </a>
+                {% endif %}
+
+                {% if perms.skills.view_skill %}
+                <a href="{% url 'skill_list' %}" class="{% if '/skills/' in request.path %}active{% endif %}">
+                    <i class="bi bi-stars"></i> Skills
+                </a>
+                {% endif %}
+
+                {% if user.is_superuser %}
+                <a href="{% url 'admin:index' %}" target="_blank">
+                    <i class="bi bi-shield-lock"></i> Django Admin
+                </a>
+                {% endif %}
+
+                <form method="post" action="{% url 'logout' %}" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="sidebar-logout-btn">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </form>
+            {% endif %}
 
         </div>
 

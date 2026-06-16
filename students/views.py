@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 
@@ -7,7 +8,9 @@ from django.http import JsonResponse
 from departments.models import Department
 from skills.models import Skill
 
-# Create your views here.
+
+@login_required
+@permission_required('students.view_student', raise_exception=True)
 def student_list(request):
 
     students = Student.objects.all()
@@ -24,7 +27,9 @@ def student_list(request):
         }
     )
 
-# Create a new student
+
+@login_required
+@permission_required('students.add_student', raise_exception=True)
 def student_create(request):
 
     form = StudentForm()
@@ -37,7 +42,9 @@ def student_create(request):
         }
     )
 
-# create with ajax
+
+@login_required
+@permission_required('students.add_student', raise_exception=True)
 def student_ajax_create(request):
 
     if request.method == 'POST':
@@ -62,7 +69,9 @@ def student_ajax_create(request):
         'status': 'invalid'
     })
 
-# update with ajax
+
+@login_required
+@permission_required('students.change_student', raise_exception=True)
 def student_ajax_update(request, pk):
 
     student = get_object_or_404(
@@ -94,7 +103,9 @@ def student_ajax_update(request, pk):
         'status': 'invalid'
     })
 
-# delete with ajax
+
+@login_required
+@permission_required('students.delete_student', raise_exception=True)
 def student_ajax_delete(request, pk):
 
     if request.method == 'POST':
@@ -115,6 +126,8 @@ def student_ajax_delete(request, pk):
     })
 
 
+@login_required
+@permission_required('students.change_student', raise_exception=True)
 def student_ajax_status(request, pk):
     if request.method == 'POST':
         student = get_object_or_404(Student, pk=pk)
@@ -140,6 +153,8 @@ def student_ajax_status(request, pk):
     })
 
 
+@login_required
+@permission_required('students.change_student', raise_exception=True)
 def student_ajax_detail(request, pk):
 
     student = get_object_or_404(
@@ -163,6 +178,9 @@ def student_ajax_detail(request, pk):
         'is_active': student.is_active,
     })
 
+
+@login_required
+@permission_required('students.view_student', raise_exception=True)
 def student_detail(request, pk):
 
     student = get_object_or_404(

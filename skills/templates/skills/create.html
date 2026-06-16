@@ -1,44 +1,77 @@
 {% extends 'base.html' %}
 
+{% block title %}
+Create Skill
+{% endblock %}
+
 {% block content %}
 
-<h2>Create Skill</h2>
+<div class="card">
 
-<form method="post" id="skillForm">
+    <div class="card-header">
+        <h3>Create Skill</h3>
+    </div>
 
-    {% csrf_token %}
+    <div class="card-body">
 
-    <div class="mb-3">
+        <form method="post" id="skillForm">
 
-        <label>Name</label>
+            {% csrf_token %}
 
-        {{ form.name }}
+            <div class="row">
 
-        <div class="text-danger">
-            {{ form.name.errors }}
-        </div>
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Name *
+                    </label>
+
+                    {{ form.name }}
+
+                    <div class="text-danger">
+                        {{ form.name.errors }}
+                    </div>
+
+                </div>
+
+                <div class="col-md-12 mb-3">
+
+                    <label class="form-label">
+                        Description *
+                    </label>
+
+                    {{ form.description }}
+
+                    <div class="text-danger">
+                        {{ form.description.errors }}
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            <div id="formErrors" class="alert alert-danger d-none"></div>
+
+            <button type="submit"
+                    class="btn btn-success">
+                Save Skill
+            </button>
+
+            <a href="{% url 'skill_list' %}"
+               class="btn btn-secondary">
+                Cancel
+            </a>
+
+        </form>
 
     </div>
 
-    <div class="mb-3">
-
-        <label>Description</label>
-
-        {{ form.description }}
-
-        <div class="text-danger">
-            {{ form.description.errors }}
-        </div>
-
-    </div>
-
-    <button class="btn btn-success">
-        Save
-    </button>
-
-</form>
-
-<div id="formErrors" class="alert alert-danger d-none mt-2"></div>
+</div>
 
 {% endblock %}
 
@@ -76,7 +109,8 @@
                             return;
                         }
                         var input = $("#skillForm [name='" + field + "']");
-                        input.closest(".mb-3").find(".text-danger").first().html(messages.join("<br>"));
+                        var wrapper = input.closest(".mb-3");
+                        wrapper.find(".text-danger").first().html(messages.join("<br>"));
                     });
 
                 }

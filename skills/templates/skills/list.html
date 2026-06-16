@@ -6,10 +6,12 @@
 
     <h2>Skills</h2>
 
+    {% if perms.skills.add_skill %}
     <a href="{% url 'skill_create' %}"
        class="btn btn-primary">
        Add Skill
     </a>
+    {% endif %}
 
 </div>
 
@@ -48,6 +50,7 @@
         <td>{{ skill.name }}</td>
         <td>{{ skill.description }}</td>
         <td>
+            {% if perms.skills.change_skill %}
             <button
                class="btn btn-warning btn-sm edit-btn"
                data-id="{{ skill.id }}"
@@ -55,7 +58,9 @@
                aria-label="Edit">
                 <i class="bi bi-pencil"></i>
             </button>
+            {% endif %}
 
+            {% if perms.skills.delete_skill %}
             <button
                class="btn btn-danger btn-sm delete-btn"
                data-id="{{ skill.id }}"
@@ -63,6 +68,7 @@
                aria-label="Delete">
                 <i class="bi bi-trash"></i>
             </button>
+            {% endif %}
         </td>
     </tr>
     {% endfor %}

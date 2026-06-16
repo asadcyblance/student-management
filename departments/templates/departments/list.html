@@ -6,10 +6,12 @@
 
     <h2>Departments</h2>
 
+    {% if perms.departments.add_department %}
     <a href="{% url 'department_create' %}"
        class="btn btn-primary">
         Add Department
     </a>
+    {% endif %}
 
 </div>
 
@@ -58,6 +60,7 @@
 
             <td>
 
+                {% if perms.departments.change_department %}
                 <button
                    class="btn btn-warning btn-sm edit-btn"
                    data-id="{{ department.id }}"
@@ -65,7 +68,9 @@
                    aria-label="Edit">
                     <i class="bi bi-pencil"></i>
                 </button>
+                {% endif %}
 
+                {% if perms.departments.delete_department %}
                 <button
                 class="btn btn-danger btn-sm delete-btn"
                 data-id="{{ department.id }}"
@@ -73,6 +78,7 @@
                 aria-label="Delete">
                 <i class="bi bi-trash"></i>
                 </button>
+                {% endif %}
 
             </td>
 

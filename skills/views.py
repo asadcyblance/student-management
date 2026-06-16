@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 
@@ -5,7 +6,9 @@ from .models import Skill
 from .forms import SkillForm
 from django.http import JsonResponse
 
-# List all skills
+
+@login_required
+@permission_required('skills.view_skill', raise_exception=True)
 def skill_list(request):
 
     skills = Skill.objects.all()
@@ -18,7 +21,9 @@ def skill_list(request):
         }
     )
 
-# Create a new skill
+
+@login_required
+@permission_required('skills.add_skill', raise_exception=True)
 def skill_create(request):
 
     form = SkillForm()
@@ -31,7 +36,9 @@ def skill_create(request):
         }
     )
 
-# create with ajax
+
+@login_required
+@permission_required('skills.add_skill', raise_exception=True)
 def skill_ajax_create(request):
 
     if request.method == 'POST':
@@ -58,7 +65,9 @@ def skill_ajax_create(request):
         'status': 'invalid'
     })
 
-# update with ajax
+
+@login_required
+@permission_required('skills.change_skill', raise_exception=True)
 def skill_ajax_update(request, pk):
 
     skill = get_object_or_404(
@@ -90,7 +99,9 @@ def skill_ajax_update(request, pk):
         'status': 'invalid'
     })
 
-# delete with ajax
+
+@login_required
+@permission_required('skills.delete_skill', raise_exception=True)
 def skill_ajax_delete(request, pk):
 
     if request.method == 'POST':
@@ -111,6 +122,8 @@ def skill_ajax_delete(request, pk):
     })
 
 
+@login_required
+@permission_required('skills.change_skill', raise_exception=True)
 def skill_ajax_detail(request, pk):
 
     skill = get_object_or_404(

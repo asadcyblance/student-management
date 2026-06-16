@@ -1,80 +1,139 @@
 {% extends 'base.html' %}
 
+{% block title %}
+Create Department
+{% endblock %}
+
 {% block content %}
 
-<h2>Create Department</h2>
+<div class="card">
 
-<form method="post" id="departmentForm">
+    <div class="card-header">
+        <h3>Create Department</h3>
+    </div>
 
-    {% csrf_token %}
+    <div class="card-body">
 
-    {% for field in form %}
-        <div class="form-group">
-            {{ field.label_tag }}
-            {{ field }}
-            <div class="text-danger"></div>
-        </div>
-    {% endfor %}
+        <form method="post" id="departmentForm">
 
-    <div id="formErrors" class="alert alert-danger d-none"></div>
+            {% csrf_token %}
 
-    <button class="btn btn-success">
-        Save
-    </button>
+            <div class="row">
 
-</form>
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Name *
+                    </label>
+
+                    {{ form.name }}
+
+                    <div class="text-danger">
+                        {{ form.name.errors }}
+                    </div>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Code *
+                    </label>
+
+                    {{ form.code }}
+
+                    <div class="text-danger">
+                        {{ form.code.errors }}
+                    </div>
+
+                </div>
+
+                <div class="col-md-12 mb-3">
+
+                    <label class="form-label">
+                        Description *
+                    </label>
+
+                    {{ form.description }}
+
+                    <div class="text-danger">
+                        {{ form.description.errors }}
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            <div id="formErrors" class="alert alert-danger d-none"></div>
+
+            <button type="submit"
+                    class="btn btn-success">
+                Save Department
+            </button>
+
+            <a href="{% url 'department_list' %}"
+               class="btn btn-secondary">
+                Cancel
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
 
 {% endblock %}
 
 {% block js %}
 <script>
+
     function clearDepartmentErrors() {
         $("#formErrors").addClass("d-none").html("");
         $("#departmentForm .text-danger").html("");
     }
 
-    function showDepartmentErrors(errors) {
+    $("#departmentForm").submit(function(e){
+
+        e.preventDefault();
         clearDepartmentErrors();
 
-        $.each(errors, function(field, messages) {
-            if (field === "__all__") {
-                $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
-                return;
-            }
-
-            var input = $("#departmentForm [name='" + field + "']");
-            input.closest(".form-group").find(".text-danger").first().html(messages.join("<br>"));
-        });
-    }
-
-    $("#departmentForm").submit(function(e){
-    
-        e.preventDefault();
-    
         $.ajax({
-    
+
             url: "{% url 'department_ajax_create' %}",
-    
+
             type: "POST",
-    
+
             data: $(this).serialize(),
-    
+
             success:function(response){
-    
-                if(response.status=="success"){
+
+                if(response.status == "success"){
+
                     window.location.href = "{% url 'department_list' %}?success=created";
 
+                } else {
+                    $.each(response.errors || {}, function(field, messages) {
+                        if (field === "__all__") {
+                            $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
+                            return;
+                        }
+                        var input = $("#departmentForm [name='" + field + "']");
+                        var wrapper = input.closest(".mb-3");
+                        wrapper.find(".text-danger").first().html(messages.join("<br>"));
+                    });
+
                 }
-    
-                else{
-                    showDepartmentErrors(response.errors || {});
-                }
-    
+
             }
-    
+
         });
-    
+
     });
-    
-    </script>
+
+</script>
 {% endblock %}

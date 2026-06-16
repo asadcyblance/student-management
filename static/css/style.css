@@ -2,6 +2,12 @@ body{
     background:#f8f9fa;
 }
 
+.dropzone{
+    border:2px dashed #ced4da;
+    border-radius:8px;
+    min-height:120px;
+}
+
 .sidebar{
     min-height:100vh;
     background:#212529;

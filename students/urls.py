@@ -51,4 +51,28 @@ urlpatterns = [
         views.student_ajax_status,
         name='student_ajax_status'
     ),
+
+    path(
+        'ajax/upload-temp-image/',
+        views.student_ajax_upload_temp_image,
+        name='student_ajax_upload_temp_image'
+    ),
+
+    path(
+        'ajax/delete-temp-image/',
+        views.student_ajax_delete_temp_image,
+        name='student_ajax_delete_temp_image'
+    ),
+
+    path(
+        'ajax/upload-profile/<int:pk>/',
+        views.student_ajax_upload_profile,
+        name='student_ajax_upload_profile'
+    ),
+
+    path(
+        'ajax/delete-profile/<int:pk>/',
+        views.student_ajax_delete_profile,
+        name='student_ajax_delete_profile'
+    ),
 ]

@@ -45,4 +45,10 @@ urlpatterns = [
         views.student_ajax_detail,
         name='student_ajax_detail'
     ),
+
+    path(
+        'ajax/status/<int:pk>/',
+        views.student_ajax_status,
+        name='student_ajax_status'
+    ),
 ]

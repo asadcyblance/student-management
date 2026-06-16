@@ -15,53 +15,58 @@
 
 <hr>
 
-<div id="successMessage" class="alert alert-success d-none"></div>
+<div id="successMessage" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+    <span class="message-text"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 
 {% if request.GET.success == 'created' %}
-    <div class="alert alert-success">Skill created successfully.</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Skill created successfully.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 {% elif request.GET.success == 'updated' %}
-    <div class="alert alert-success">Skill updated successfully.</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Skill updated successfully.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 {% endif %}
 
-<table class="table table-bordered">
-
+<table id="skillsTable" class="table table-bordered table-striped align-middle">
+    <thead>
     <tr>
         <th>ID</th>
         <th>Name</th>
         <th>Description</th>
         <th>Actions</th>
     </tr>
-
+    </thead>
+    <tbody>
     {% for skill in skills %}
-
     <tr>
-
         <td>{{ skill.id }}</td>
-
         <td>{{ skill.name }}</td>
-
         <td>{{ skill.description }}</td>
-
         <td>
-
             <button
                class="btn btn-warning btn-sm edit-btn"
-               data-id="{{ skill.id }}">
-                Edit
+               data-id="{{ skill.id }}"
+               title="Edit"
+               aria-label="Edit">
+                <i class="bi bi-pencil"></i>
             </button>
 
             <button
                class="btn btn-danger btn-sm delete-btn"
-               data-id="{{ skill.id }}">
-                Delete
+               data-id="{{ skill.id }}"
+               title="Delete"
+               aria-label="Delete">
+                <i class="bi bi-trash"></i>
             </button>
-
         </td>
-
     </tr>
-
     {% endfor %}
-
+    </tbody>
 </table>
 
 <div class="modal fade" id="editSkillModal" tabindex="-1" aria-hidden="true">
@@ -95,6 +100,11 @@
 
 {% block js %}
 <script>
+    var skillsTable = $("#skillsTable").DataTable({
+        pageLength: 10,
+        order: [[0, "desc"]]
+    });
+
     var skillModal = new bootstrap.Modal($("#editSkillModal")[0]);
 
     $(".edit-btn").click(function(){
@@ -155,8 +165,9 @@
 
                     if(response.status == "success"){
 
-                        row.remove();
-                        $("#successMessage").removeClass("d-none").html("Skill deleted successfully.");
+                        skillsTable.row(row).remove().draw(false);
+                        $("#successMessage").removeClass("d-none");
+                        $("#successMessage .message-text").text("Skill deleted successfully.");
 
                     }
 

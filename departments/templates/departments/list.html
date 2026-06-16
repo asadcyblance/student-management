@@ -13,15 +13,24 @@
 
 </div>
 
-<div id="successMessage" class="alert alert-success d-none"></div>
+<div id="successMessage" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+    <span class="message-text"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 
 {% if request.GET.success == 'created' %}
-    <div class="alert alert-success">Department created successfully.</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Department created successfully.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 {% elif request.GET.success == 'updated' %}
-    <div class="alert alert-success">Department updated successfully.</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Department updated successfully.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 {% endif %}
 
-<table class="table table-bordered">
+<table id="departmentsTable" class="table table-bordered table-striped align-middle">
 
     <thead>
         <tr>
@@ -51,14 +60,18 @@
 
                 <button
                    class="btn btn-warning btn-sm edit-btn"
-                   data-id="{{ department.id }}">
-                    Edit
+                   data-id="{{ department.id }}"
+                   title="Edit"
+                   aria-label="Edit">
+                    <i class="bi bi-pencil"></i>
                 </button>
 
                 <button
                 class="btn btn-danger btn-sm delete-btn"
-                data-id="{{ department.id }}">
-                Delete
+                data-id="{{ department.id }}"
+                title="Delete"
+                aria-label="Delete">
+                <i class="bi bi-trash"></i>
                 </button>
 
             </td>
@@ -106,6 +119,11 @@
 
 {% block js %}
 <script>
+    var departmentsTable = $("#departmentsTable").DataTable({
+        pageLength: 10,
+        order: [[0, "desc"]]
+    });
+
     var departmentModal = new bootstrap.Modal($("#editDepartmentModal")[0]);
 
     $(".edit-btn").click(function(){
@@ -167,8 +185,9 @@
     
                     if(response.status=="success"){
     
-                        row.remove();
-                        $("#successMessage").removeClass("d-none").html("Department deleted successfully.");
+                        departmentsTable.row(row).remove().draw(false);
+                        $("#successMessage").removeClass("d-none");
+                        $("#successMessage .message-text").text("Department deleted successfully.");
     
                     }
     

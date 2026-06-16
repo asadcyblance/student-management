@@ -15,15 +15,24 @@
 
 <hr>
 
-<div id="successMessage" class="alert alert-success d-none"></div>
+<div id="successMessage" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+    <span class="message-text"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 
 {% if request.GET.success == 'created' %}
-    <div class="alert alert-success">Student created successfully.</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Student created successfully.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 {% elif request.GET.success == 'updated' %}
-    <div class="alert alert-success">Student updated successfully.</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Student updated successfully.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 {% endif %}
 
-<table class="table table-bordered">
+<table id="studentsTable" class="table table-bordered table-striped align-middle">
 
     <thead>
 
@@ -62,30 +71,35 @@
         <td>{{ student.mobile }}</td>
 
         <td>
-            {% if student.is_active %}
-                <span class="badge bg-success">Active</span>
-            {% else %}
-                <span class="badge bg-danger">Inactive</span>
-            {% endif %}
+            <select class="form-select form-select-sm status-select" data-id="{{ student.id }}">
+                <option value="active" {% if student.is_active %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if not student.is_active %}selected{% endif %}>Inactive</option>
+            </select>
         </td>
 
         <td>
 
             <a href="{% url 'student_detail' student.id %}"
-               class="btn btn-info btn-sm">
-                View
+               class="btn btn-info btn-sm"
+               title="View"
+               aria-label="View">
+                <i class="bi bi-eye"></i>
             </a>
 
             <button
                class="btn btn-warning btn-sm edit-btn"
-               data-id="{{ student.id }}">
-                Edit
+               data-id="{{ student.id }}"
+               title="Edit"
+               aria-label="Edit">
+                <i class="bi bi-pencil"></i>
             </button>
 
             <button
                class="btn btn-danger btn-sm delete-btn"
-               data-id="{{ student.id }}">
-                Delete
+               data-id="{{ student.id }}"
+               title="Delete"
+               aria-label="Delete">
+                <i class="bi bi-trash"></i>
             </button>
 
         </td>
@@ -191,6 +205,11 @@
 
 {% block js %}
 <script>
+    var studentsTable = $("#studentsTable").DataTable({
+        pageLength: 10,
+        order: [[0, "desc"]]
+    });
+
     var studentModal = new bootstrap.Modal($("#editStudentModal")[0]);
 
     $(".edit-btn").click(function(){
@@ -265,8 +284,9 @@
 
                     if(response.status == "success"){
 
-                        row.remove();
-                        $("#successMessage").removeClass("d-none").html("Student deleted successfully.");
+                        studentsTable.row(row).remove().draw(false);
+                        $("#successMessage").removeClass("d-none");
+                        $("#successMessage .message-text").text("Student deleted successfully.");
 
                     }
 
@@ -276,6 +296,36 @@
 
         }
 
+    });
+
+    $(document).on("change", ".status-select", function(){
+        var select = $(this);
+        var student_id = select.data("id");
+        var selected_status = select.val();
+        var previous_status = selected_status === "active" ? "inactive" : "active";
+
+        $.ajax({
+            url: "/students/ajax/status/" + student_id + "/",
+            type: "POST",
+            data: {
+                status: selected_status,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function(response){
+                if(response.status === "success"){
+                    $("#successMessage")
+                        .removeClass("d-none");
+                    $("#successMessage .message-text").text("Student status updated successfully.");
+                } else {
+                    select.val(previous_status);
+                    alert(response.message || "Could not update status.");
+                }
+            },
+            error: function(){
+                select.val(previous_status);
+                alert("Could not update status.");
+            }
+        });
     });
 
 </script>

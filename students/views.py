@@ -115,6 +115,31 @@ def student_ajax_delete(request, pk):
     })
 
 
+def student_ajax_status(request, pk):
+    if request.method == 'POST':
+        student = get_object_or_404(Student, pk=pk)
+
+        status_value = request.POST.get('status')
+        if status_value not in ['active', 'inactive']:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid status value'
+            })
+
+        student.is_active = (status_value == 'active')
+        student.save(update_fields=['is_active'])
+
+        return JsonResponse({
+            'status': 'success',
+            'is_active': student.is_active
+        })
+
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method'
+    })
+
+
 def student_ajax_detail(request, pk):
 
     student = get_object_or_404(

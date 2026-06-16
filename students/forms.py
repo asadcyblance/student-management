@@ -86,6 +86,9 @@ class StudentForm(forms.ModelForm):
         for field in self.fields:
             self.fields[field].required = True
 
+        # allow create/edit without forcing active status checkbox
+        self.fields['is_active'].required = False
+
     def clean_first_name(self):
         first_name = self.cleaned_data['first_name']
 

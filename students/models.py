@@ -62,6 +62,24 @@ class Student(models.Model):
         Skill
     )
 
+    profile_thumb = models.ImageField(
+        upload_to='students/thumb/',
+        blank=True,
+        null=True,
+    )
+
+    profile_medium = models.ImageField(
+        upload_to='students/medium/',
+        blank=True,
+        null=True,
+    )
+
+    profile_large = models.ImageField(
+        upload_to='students/large/',
+        blank=True,
+        null=True,
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
@@ -72,3 +90,33 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class StudentTempImage(models.Model):
+
+    upload_token = models.CharField(
+        max_length=36,
+        unique=True,
+    )
+
+    profile_thumb = models.ImageField(
+        upload_to='students/temp/thumb/',
+        blank=True,
+        null=True,
+    )
+
+    profile_medium = models.ImageField(
+        upload_to='students/temp/medium/',
+        blank=True,
+        null=True,
+    )
+
+    profile_large = models.ImageField(
+        upload_to='students/temp/large/',
+        blank=True,
+        null=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )

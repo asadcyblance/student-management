@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Edit Student
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-warning">
+
+            <h3>
+                Edit Student
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" id="studentForm">
+
+                {% csrf_token %}
+
+                <div class="row">
+
+                    <!-- First Name -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            First Name
+                        </label>
+
+                        {{ form.first_name }}
+
+                        <span class="text-danger">
+                            {{ form.first_name.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Last Name
+                        </label>
+
+                        {{ form.last_name }}
+
+                        <span class="text-danger">
+                            {{ form.last_name.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Email
+                        </label>
+
+                        {{ form.email }}
+
+                        <span class="text-danger">
+                            {{ form.email.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- Mobile -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Mobile
+                        </label>
+
+                        {{ form.mobile }}
+
+                        <span class="text-danger">
+                            {{ form.mobile.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- DOB -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Date Of Birth
+                        </label>
+
+                        {{ form.dob }}
+
+                        <span class="text-danger">
+                            {{ form.dob.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- City -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            City
+                        </label>
+
+                        {{ form.city }}
+
+                        <span class="text-danger">
+                            {{ form.city.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label d-block">
+                            Gender
+                        </label>
+
+                        {{ form.gender }}
+
+                        <span class="text-danger">
+                            {{ form.gender.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- Department -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Department
+                        </label>
+
+                        {{ form.department }}
+
+                        <span class="text-danger">
+                            {{ form.department.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- Address -->
+                    <div class="col-md-12 mb-3">
+
+                        <label class="form-label">
+                            Address
+                        </label>
+
+                        {{ form.address }}
+
+                        <span class="text-danger">
+                            {{ form.address.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- Skills -->
+                    <div class="col-md-12 mb-3">
+
+                        <label class="form-label d-block">
+                            Skills
+                        </label>
+
+                        {{ form.skills }}
+
+                        <span class="text-danger">
+                            {{ form.skills.errors }}
+                        </span>
+
+                    </div>
+
+                    <!-- Active -->
+                    <div class="col-md-12 mb-3">
+
+                        <div class="form-check">
+
+                            {{ form.is_active }}
+
+                            <label class="form-check-label">
+                                Active Student
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+                <div id="formErrors" class="alert alert-danger d-none"></div>
+
+                <button type="submit"
+                        class="btn btn-warning">
+                    Update Student
+                </button>
+
+                <a href="{% url 'student_list' %}"
+                   class="btn btn-secondary">
+                    Cancel
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+
+    function clearStudentErrors() {
+        $("#formErrors").addClass("d-none").html("");
+        $("#studentForm .text-danger").html("");
+    }
+
+    $("#studentForm").submit(function(e){
+
+        e.preventDefault();
+        clearStudentErrors();
+
+        $.ajax({
+
+            url: "{% url 'student_ajax_update' student.id %}",
+
+            type: "POST",
+
+            data: $(this).serialize(),
+
+            success:function(response){
+
+                if(response.status == "success"){
+
+                    window.location.href = "{% url 'student_list' %}?success=updated";
+
+                } else {
+                    $.each(response.errors || {}, function(field, messages) {
+                        if (field === "__all__") {
+                            $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
+                            return;
+                        }
+                        var input = $("#studentForm [name='" + field + "']");
+                        var wrapper = input.closest(".mb-3");
+                        wrapper.find(".text-danger").first().html(messages.join("<br>"));
+                    });
+
+                }
+
+            }
+
+        });
+
+    });
+
+</script>
+{% endblock %}

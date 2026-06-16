@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between">
+
+    <h2>Skills</h2>
+
+    <a href="{% url 'skill_create' %}"
+       class="btn btn-primary">
+       Add Skill
+    </a>
+
+</div>
+
+<hr>
+
+<div id="successMessage" class="alert alert-success d-none"></div>
+
+{% if request.GET.success == 'created' %}
+    <div class="alert alert-success">Skill created successfully.</div>
+{% elif request.GET.success == 'updated' %}
+    <div class="alert alert-success">Skill updated successfully.</div>
+{% endif %}
+
+<table class="table table-bordered">
+
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for skill in skills %}
+
+    <tr>
+
+        <td>{{ skill.id }}</td>
+
+        <td>{{ skill.name }}</td>
+
+        <td>{{ skill.description }}</td>
+
+        <td>
+
+            <button
+               class="btn btn-warning btn-sm edit-btn"
+               data-id="{{ skill.id }}">
+                Edit
+            </button>
+
+            <button
+               class="btn btn-danger btn-sm delete-btn"
+               data-id="{{ skill.id }}">
+                Delete
+            </button>
+
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+<div class="modal fade" id="editSkillModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Skill</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="editSkillErrors" class="alert alert-danger d-none"></div>
+                <form id="editSkillForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="editSkillId">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" id="editSkillName" name="name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="editSkillDescription" name="description" rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+    var skillModal = new bootstrap.Modal($("#editSkillModal")[0]);
+
+    $(".edit-btn").click(function(){
+        var skill_id = $(this).data("id");
+        $("#editSkillErrors").addClass("d-none").html("");
+
+        $.get("/skills/ajax/detail/" + skill_id + "/", function(response){
+            if(response.status === "success"){
+                $("#editSkillId").val(response.id);
+                $("#editSkillName").val(response.name);
+                $("#editSkillDescription").val(response.description);
+                skillModal.show();
+            }
+        });
+    });
+
+    $("#editSkillForm").submit(function(e){
+        e.preventDefault();
+        var skill_id = $("#editSkillId").val();
+
+        $.ajax({
+            url: "/skills/ajax/update/" + skill_id + "/",
+            type: "POST",
+            data: $(this).serialize(),
+            success: function(response){
+                if(response.status === "success"){
+                    window.location.href = "{% url 'skill_list' %}?success=updated";
+                } else {
+                    var errorHtml = "";
+                    $.each(response.errors || {}, function(field, messages){
+                        errorHtml += messages.join("<br>") + "<br>";
+                    });
+                    $("#editSkillErrors").removeClass("d-none").html(errorHtml);
+                }
+            }
+        });
+    });
+
+    $(".delete-btn").click(function(){
+
+        var skill_id = $(this).data('id');
+
+        var row = $(this).closest('tr');
+
+        if(confirm("Delete Skill?")){
+
+            $.ajax({
+
+                url: "/skills/ajax/delete/" + skill_id + "/",
+
+                type: "POST",
+
+                data: {
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+
+                success: function(response){
+
+                    if(response.status == "success"){
+
+                        row.remove();
+                        $("#successMessage").removeClass("d-none").html("Skill deleted successfully.");
+
+                    }
+
+                }
+
+            });
+
+        }
+
+    });
+
+</script>
+{% endblock %}

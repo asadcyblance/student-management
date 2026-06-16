@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between mb-3">
+
+    <h2>Departments</h2>
+
+    <a href="{% url 'department_create' %}"
+       class="btn btn-primary">
+        Add Department
+    </a>
+
+</div>
+
+<div id="successMessage" class="alert alert-success d-none"></div>
+
+{% if request.GET.success == 'created' %}
+    <div class="alert alert-success">Department created successfully.</div>
+{% elif request.GET.success == 'updated' %}
+    <div class="alert alert-success">Department updated successfully.</div>
+{% endif %}
+
+<table class="table table-bordered">
+
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+    {% for department in departments %}
+
+        <tr>
+
+            <td>{{ department.id }}</td>
+
+            <td>{{ department.name }}</td>
+
+            <td>{{ department.code }}</td>
+
+            <td>{{ department.description }}</td>
+
+            <td>
+
+                <button
+                   class="btn btn-warning btn-sm edit-btn"
+                   data-id="{{ department.id }}">
+                    Edit
+                </button>
+
+                <button
+                class="btn btn-danger btn-sm delete-btn"
+                data-id="{{ department.id }}">
+                Delete
+                </button>
+
+            </td>
+
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+<div class="modal fade" id="editDepartmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Department</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="editDepartmentErrors" class="alert alert-danger d-none"></div>
+                <form id="editDepartmentForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="editDepartmentId">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" id="editDepartmentName" name="name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <input type="text" class="form-control" id="editDepartmentCode" name="code">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="editDepartmentDescription" name="description" rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+    var departmentModal = new bootstrap.Modal($("#editDepartmentModal")[0]);
+
+    $(".edit-btn").click(function(){
+        var department_id = $(this).data("id");
+        $("#editDepartmentErrors").addClass("d-none").html("");
+
+        $.get("/departments/ajax/detail/" + department_id + "/", function(response){
+            if(response.status === "success"){
+                $("#editDepartmentId").val(response.id);
+                $("#editDepartmentName").val(response.name);
+                $("#editDepartmentCode").val(response.code);
+                $("#editDepartmentDescription").val(response.description);
+                departmentModal.show();
+            }
+        });
+    });
+
+    $("#editDepartmentForm").submit(function(e){
+        e.preventDefault();
+        var department_id = $("#editDepartmentId").val();
+
+        $.ajax({
+            url: "/departments/ajax/update/" + department_id + "/",
+            type: "POST",
+            data: $(this).serialize(),
+            success: function(response){
+                if(response.status === "success"){
+                    window.location.href = "{% url 'department_list' %}?success=updated";
+                } else {
+                    var errorHtml = "";
+                    $.each(response.errors || {}, function(field, messages){
+                        errorHtml += messages.join("<br>") + "<br>";
+                    });
+                    $("#editDepartmentErrors").removeClass("d-none").html(errorHtml);
+                }
+            }
+        });
+    });
+
+    $(".delete-btn").click(function(){
+    
+        var department_id=$(this).data('id');
+    
+        var row=$(this).closest('tr');
+    
+        if(confirm("Delete Department?")){
+    
+            $.ajax({
+    
+                url:"/departments/ajax/delete/"+department_id+"/",
+    
+                type:"POST",
+    
+                data:{
+                    csrfmiddlewaretoken:'{{ csrf_token }}'
+                },
+    
+                success:function(response){
+    
+                    if(response.status=="success"){
+    
+                        row.remove();
+                        $("#successMessage").removeClass("d-none").html("Department deleted successfully.");
+    
+                    }
+    
+                }
+    
+            });
+    
+        }
+    
+    });
+    
+    </script>
+{% endblock %}

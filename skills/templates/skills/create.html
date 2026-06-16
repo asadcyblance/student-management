@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Create Skill</h2>
+
+<form method="post" id="skillForm">
+
+    {% csrf_token %}
+
+    <div class="mb-3">
+
+        <label>Name</label>
+
+        {{ form.name }}
+
+        <div class="text-danger">
+            {{ form.name.errors }}
+        </div>
+
+    </div>
+
+    <div class="mb-3">
+
+        <label>Description</label>
+
+        {{ form.description }}
+
+        <div class="text-danger">
+            {{ form.description.errors }}
+        </div>
+
+    </div>
+
+    <button class="btn btn-success">
+        Save
+    </button>
+
+</form>
+
+<div id="formErrors" class="alert alert-danger d-none mt-2"></div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+
+    function clearSkillErrors() {
+        $("#formErrors").addClass("d-none").html("");
+        $("#skillForm .text-danger").html("");
+    }
+
+    $("#skillForm").submit(function(e){
+
+        e.preventDefault();
+        clearSkillErrors();
+
+        $.ajax({
+
+            url: "{% url 'skill_ajax_create' %}",
+
+            type: "POST",
+
+            data: $(this).serialize(),
+
+            success:function(response){
+
+                if(response.status == "success"){
+
+                    window.location.href = "{% url 'skill_list' %}?success=created";
+
+                } else {
+                    $.each(response.errors || {}, function(field, messages) {
+                        if (field === "__all__") {
+                            $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
+                            return;
+                        }
+                        var input = $("#skillForm [name='" + field + "']");
+                        input.closest(".mb-3").find(".text-danger").first().html(messages.join("<br>"));
+                    });
+
+                }
+
+            }
+
+        });
+
+    });
+
+</script>
+{% endblock %}

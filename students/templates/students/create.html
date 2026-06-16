@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Create Student
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+    <div class="card-header">
+        <h3>Create Student</h3>
+    </div>
+
+    <div class="card-body">
+
+        <form method="post" id="studentForm">
+
+            {% csrf_token %}
+
+            <div class="row">
+
+                <!-- First Name -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        First Name *
+                    </label>
+
+                    {{ form.first_name }}
+
+                    <div class="text-danger">
+                        {{ form.first_name.errors }}
+                    </div>
+
+                </div>
+
+                <!-- Last Name -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Last Name *
+                    </label>
+
+                    {{ form.last_name }}
+
+                    <div class="text-danger">
+                        {{ form.last_name.errors }}
+                    </div>
+
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Email *
+                    </label>
+
+                    {{ form.email }}
+
+                    <div class="text-danger">
+                        {{ form.email.errors }}
+                    </div>
+
+                </div>
+
+                <!-- Mobile -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Mobile *
+                    </label>
+
+                    {{ form.mobile }}
+
+                    <div class="text-danger">
+                        {{ form.mobile.errors }}
+                    </div>
+
+                </div>
+
+                <!-- DOB -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Date of Birth *
+                    </label>
+
+                    {{ form.dob }}
+
+                    <div class="text-danger">
+                        {{ form.dob.errors }}
+                    </div>
+
+                </div>
+
+                <!-- City -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        City *
+                    </label>
+
+                    {{ form.city }}
+
+                    <div class="text-danger">
+                        {{ form.city.errors }}
+                    </div>
+
+                </div>
+
+                <!-- Department -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Department *
+                    </label>
+
+                    {{ form.department }}
+
+                    <div class="text-danger">
+                        {{ form.department.errors }}
+                    </div>
+
+                </div>
+
+                <!-- Gender -->
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label d-block">
+                        Gender *
+                    </label>
+
+                    {{ form.gender }}
+
+                    <div class="text-danger">
+                        {{ form.gender.errors }}
+                    </div>
+
+                </div>
+
+                <!-- Address -->
+                <div class="col-md-12 mb-3">
+
+                    <label class="form-label">
+                        Address *
+                    </label>
+
+                    {{ form.address }}
+
+                    <div class="text-danger">
+                        {{ form.address.errors }}
+                    </div>
+
+                </div>
+
+                <!-- Skills -->
+                <div class="col-md-12 mb-3">
+
+                    <label class="form-label">
+                        Skills *
+                    </label>
+
+                    {{ form.skills }}
+
+                    <div class="text-danger">
+                        {{ form.skills.errors }}
+                    </div>
+
+                </div>
+
+                <!-- Active -->
+                <div class="col-md-12 mb-3">
+
+                    <div class="form-check">
+
+                        {{ form.is_active }}
+
+                        <label class="form-check-label">
+                            Active Student
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            <div id="formErrors" class="alert alert-danger d-none"></div>
+
+            <button type="submit"
+                    class="btn btn-success">
+                Save Student
+            </button>
+
+            <a href="{% url 'student_list' %}"
+               class="btn btn-secondary">
+                Cancel
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+
+    function clearStudentErrors() {
+        $("#formErrors").addClass("d-none").html("");
+        $("#studentForm .text-danger").html("");
+    }
+
+    $("#studentForm").submit(function(e){
+
+        e.preventDefault();
+        clearStudentErrors();
+
+        $.ajax({
+
+            url: "{% url 'student_ajax_create' %}",
+
+            type: "POST",
+
+            data: $(this).serialize(),
+
+            success:function(response){
+
+                if(response.status == "success"){
+
+                    window.location.href = "{% url 'student_list' %}?success=created";
+
+                } else {
+                    $.each(response.errors || {}, function(field, messages) {
+                        if (field === "__all__") {
+                            $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
+                            return;
+                        }
+                        var input = $("#studentForm [name='" + field + "']");
+                        var wrapper = input.closest(".mb-3");
+                        wrapper.find(".text-danger").first().html(messages.join("<br>"));
+                    });
+
+                }
+
+            }
+
+        });
+
+    });
+
+</script>
+{% endblock %}

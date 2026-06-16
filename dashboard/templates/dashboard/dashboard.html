@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row mb-4">
+
+        <div class="col">
+            <h2>
+                Dashboard
+            </h2>
+            <p class="text-muted">
+                Student Management System Overview
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Statistics Cards -->
+
+    <div class="row">
+
+        <!-- Students -->
+
+        <div class="col-md-3 mb-4">
+
+            <div class="card border-0 shadow">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <h6 class="text-muted">
+                                Total Students
+                            </h6>
+
+                            <h2 class="fw-bold">
+                                {{ student_count }}
+                            </h2>
+
+                        </div>
+
+                        <div>
+
+                            <i class="bi bi-mortarboard-fill text-primary fs-1"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Departments -->
+
+        <div class="col-md-3 mb-4">
+
+            <div class="card border-0 shadow">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <h6 class="text-muted">
+                                Departments
+                            </h6>
+
+                            <h2 class="fw-bold">
+                                {{ department_count }}
+                            </h2>
+
+                        </div>
+
+                        <div>
+
+                            <i class="bi bi-building-fill text-success fs-1"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Skills -->
+
+        <div class="col-md-3 mb-4">
+
+            <div class="card border-0 shadow">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <h6 class="text-muted">
+                                Skills
+                            </h6>
+
+                            <h2 class="fw-bold">
+                                {{ skill_count }}
+                            </h2>
+
+                        </div>
+
+                        <div>
+
+                            <i class="bi bi-tools text-danger fs-1"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Active Students -->
+
+        <div class="col-md-3 mb-4">
+
+            <div class="card border-0 shadow">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <h6 class="text-muted">
+                                Active Students
+                            </h6>
+
+                            <h2 class="fw-bold">
+                                {{ active_students }}
+                            </h2>
+
+                        </div>
+
+                        <div>
+
+                            <i class="bi bi-person-check-fill text-warning fs-1"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Second Row -->
+
+    <div class="row">
+
+        <div class="col-md-6">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h5 class="mb-0">
+                        Student Statistics
+                    </h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-bordered">
+
+                        <tr>
+                            <th>Total Students</th>
+                            <td>{{ student_count }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Active Students</th>
+                            <td>{{ active_students }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Inactive Students</th>
+                            <td>{{ inactive_students }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Total Departments</th>
+                            <td>{{ department_count }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Total Skills</th>
+                            <td>{{ skill_count }}</td>
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Latest Students -->
+
+        <div class="col-md-6">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-success text-white">
+
+                    <h5 class="mb-0">
+                        Latest Students
+                    </h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-hover">
+
+                        <thead>
+
+                        <tr>
+
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+
+                        </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        {% for student in latest_students %}
+
+                        <tr>
+
+                            <td>
+                                {{ student.first_name }}
+                                {{ student.last_name }}
+                            </td>
+
+                            <td>
+                                {{ student.email }}
+                            </td>
+
+                            <td>
+                                {{ student.department }}
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td colspan="3">
+                                No Students Found
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

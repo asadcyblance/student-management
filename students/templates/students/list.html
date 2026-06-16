@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between">
+
+    <h2>Students</h2>
+
+    <a href="{% url 'student_create' %}"
+       class="btn btn-primary">
+        Add Student
+    </a>
+
+</div>
+
+<hr>
+
+<div id="successMessage" class="alert alert-success d-none"></div>
+
+{% if request.GET.success == 'created' %}
+    <div class="alert alert-success">Student created successfully.</div>
+{% elif request.GET.success == 'updated' %}
+    <div class="alert alert-success">Student updated successfully.</div>
+{% endif %}
+
+<table class="table table-bordered">
+
+    <thead>
+
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Department</th>
+        <th>Skills</th>
+        <th>Mobile</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for student in students %}
+
+    <tr>
+
+        <td>{{ student.id }}</td>
+
+        <td>
+            {{ student.first_name }}
+            {{ student.last_name }}
+        </td>
+
+        <td>{{ student.email }}</td>
+
+        <td>{{ student.department }}</td>
+
+        <td>{{ student.skills.all|join:', ' }}</td>
+
+        <td>{{ student.mobile }}</td>
+
+        <td>
+            {% if student.is_active %}
+                <span class="badge bg-success">Active</span>
+            {% else %}
+                <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+        </td>
+
+        <td>
+
+            <a href="{% url 'student_detail' student.id %}"
+               class="btn btn-info btn-sm">
+                View
+            </a>
+
+            <button
+               class="btn btn-warning btn-sm edit-btn"
+               data-id="{{ student.id }}">
+                Edit
+            </button>
+
+            <button
+               class="btn btn-danger btn-sm delete-btn"
+               data-id="{{ student.id }}">
+                Delete
+            </button>
+
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+<div class="modal fade" id="editStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="editStudentErrors" class="alert alert-danger d-none"></div>
+                <form id="editStudentForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="editStudentId">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="editFirstName" name="first_name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="editLastName" name="last_name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail" name="email">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Mobile</label>
+                            <input type="text" class="form-control" id="editMobile" name="mobile">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" id="editDob" name="dob">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">City</label>
+                            <select class="form-select" id="editCity" name="city">
+                                {% for value, label in city_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label d-block">Gender</label>
+                            {% for value, label in gender_choices %}
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="gender" value="{{ value }}" id="gender_{{ forloop.counter }}">
+                                    <label class="form-check-label" for="gender_{{ forloop.counter }}">{{ label }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Department</label>
+                            <select class="form-select" id="editDepartment" name="department">
+                                {% for department in departments %}
+                                    <option value="{{ department.id }}">{{ department.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" id="editAddress" name="address" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Skills</label>
+                            <div>
+                                {% for skill in skills %}
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input edit-skill" type="checkbox" name="skills" value="{{ skill.id }}" id="skill_{{ skill.id }}">
+                                        <label class="form-check-label" for="skill_{{ skill.id }}">{{ skill.name }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive" name="is_active">
+                                <label class="form-check-label" for="editIsActive">Active Student</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+    var studentModal = new bootstrap.Modal($("#editStudentModal")[0]);
+
+    $(".edit-btn").click(function(){
+        var student_id = $(this).data("id");
+        $("#editStudentErrors").addClass("d-none").html("");
+
+        $.get("/students/ajax/detail/" + student_id + "/", function(response){
+            if(response.status === "success"){
+                $("#editStudentId").val(response.id);
+                $("#editFirstName").val(response.first_name);
+                $("#editLastName").val(response.last_name);
+                $("#editEmail").val(response.email);
+                $("#editMobile").val(response.mobile);
+                $("#editDob").val(response.dob);
+                $("#editAddress").val(response.address);
+                $("#editCity").val(response.city);
+                $("#editDepartment").val(String(response.department));
+                $("input[name='gender'][value='" + response.gender + "']").prop("checked", true);
+                $("#editIsActive").prop("checked", response.is_active);
+
+                $(".edit-skill").prop("checked", false);
+                $.each(response.skills, function(_, skillId){
+                    $(".edit-skill[value='" + skillId + "']").prop("checked", true);
+                });
+
+                studentModal.show();
+            }
+        });
+    });
+
+    $("#editStudentForm").submit(function(e){
+        e.preventDefault();
+        var student_id = $("#editStudentId").val();
+
+        $.ajax({
+            url: "/students/ajax/update/" + student_id + "/",
+            type: "POST",
+            data: $(this).serialize(),
+            success: function(response){
+                if(response.status === "success"){
+                    window.location.href = "{% url 'student_list' %}?success=updated";
+                } else {
+                    var errorHtml = "";
+                    $.each(response.errors || {}, function(field, messages){
+                        errorHtml += messages.join("<br>") + "<br>";
+                    });
+                    $("#editStudentErrors").removeClass("d-none").html(errorHtml);
+                }
+            }
+        });
+    });
+
+    $(".delete-btn").click(function(){
+
+        var student_id = $(this).data('id');
+
+        var row = $(this).closest('tr');
+
+        if(confirm("Delete Student?")){
+
+            $.ajax({
+
+                url: "/students/ajax/delete/" + student_id + "/",
+
+                type: "POST",
+
+                data: {
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+
+                success: function(response){
+
+                    if(response.status == "success"){
+
+                        row.remove();
+                        $("#successMessage").removeClass("d-none").html("Student deleted successfully.");
+
+                    }
+
+                }
+
+            });
+
+        }
+
+    });
+
+</script>
+{% endblock %}

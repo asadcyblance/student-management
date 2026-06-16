@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Update Department</h2>
+
+<form method="post" id="departmentForm">
+
+    {% csrf_token %}
+
+    {% for field in form %}
+        <div class="form-group">
+            {{ field.label_tag }}
+            {{ field }}
+            <div class="text-danger"></div>
+        </div>
+    {% endfor %}
+
+    <div id="formErrors" class="alert alert-danger d-none"></div>
+
+    <button class="btn btn-primary">
+        Update
+    </button>
+
+</form>
+
+{% endblock %}
+
+{% block js %}
+
+<script>
+    function clearDepartmentErrors() {
+        $("#formErrors").addClass("d-none").html("");
+        $("#departmentForm .text-danger").html("");
+    }
+
+    function showDepartmentErrors(errors) {
+        clearDepartmentErrors();
+
+        $.each(errors, function(field, messages) {
+            if (field === "__all__") {
+                $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
+                return;
+            }
+
+            var input = $("#departmentForm [name='" + field + "']");
+            input.closest(".form-group").find(".text-danger").first().html(messages.join("<br>"));
+        });
+    }
+
+    $(document).ready(function() {
+
+        $('#departmentForm').submit(function(e) {
+
+            e.preventDefault();
+
+            $.ajax({        
+                url: "{% url 'department_ajax_update' department.id %}",
+                type: "POST",
+                data: $(this).serialize(),
+                success: function(response) {
+                    if(response.status == 'success') {
+                        window.location.href = "{% url 'department_list' %}?success=updated";
+                    } else {
+                        showDepartmentErrors(response.errors || {});
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $("#formErrors").removeClass("d-none").html("Error updating department.");
+                }
+            });
+        });
+
+    });
+
+</script>
+{% endblock %}

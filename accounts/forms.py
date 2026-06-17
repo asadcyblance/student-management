@@ -5,11 +5,18 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from .models import UserProfile
 
 class CustomLoginForm(AuthenticationForm):
-    username = forms.CharField(
-        label='Username',
-        widget=forms.TextInput(attrs={
+    error_messages = {
+        'invalid_login': (
+            'Please enter a correct email and password. '
+            'Note that both fields may be case-sensitive.'
+        ),
+        'inactive': 'This account is inactive.',
+    }
+    username = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter username',
+            'placeholder': 'Enter email',
             'autofocus': True,
         })
     )
@@ -20,6 +27,19 @@ class CustomLoginForm(AuthenticationForm):
             'placeholder': 'Enter password',
         })
     )
+
+    def clean(self):
+        email = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if email and password:
+            try:
+                user = User.objects.get(email__iexact=email)
+                self.cleaned_data['username'] = user.get_username()
+            except User.DoesNotExist:
+                pass
+
+        return super().clean()
 
 
 class CustomPasswordResetForm(PasswordResetForm):

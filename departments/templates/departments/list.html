@@ -99,20 +99,23 @@
             </div>
             <div class="modal-body">
                 <div id="editDepartmentErrors" class="alert alert-danger d-none"></div>
-                <form id="editDepartmentForm">
+                <form id="editDepartmentForm" novalidate>
                     {% csrf_token %}
                     <input type="hidden" id="editDepartmentId">
                     <div class="mb-3">
-                        <label class="form-label">Name</label>
+                        <label class="form-label">Name *</label>
                         <input type="text" class="form-control" id="editDepartmentName" name="name">
+                        <div class="text-danger"></div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Code</label>
+                        <label class="form-label">Code *</label>
                         <input type="text" class="form-control" id="editDepartmentCode" name="code">
+                        <div class="text-danger"></div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
+                        <label class="form-label">Description *</label>
                         <textarea class="form-control" id="editDepartmentDescription" name="description" rows="4"></textarea>
+                        <div class="text-danger"></div>
                     </div>
                     <button type="submit" class="btn btn-primary">Update</button>
                 </form>
@@ -124,6 +127,9 @@
 {% endblock %}
 
 {% block js %}
+{% load static %}
+<script src="{% static 'js/department-formvalidation.js' %}"></script>
+<script src="{% static 'js/sweetalert.js' %}"></script>
 <script>
     var departmentsTable = $("#departmentsTable").DataTable({
         pageLength: 10,
@@ -132,9 +138,20 @@
 
     var departmentModal = new bootstrap.Modal($("#editDepartmentModal")[0]);
 
+    function clearEditDepartmentErrors() {
+        $("#editDepartmentErrors").addClass("d-none").html("");
+        $("#editDepartmentForm div.text-danger").html("");
+        $("#editDepartmentForm .is-invalid").removeClass("is-invalid");
+    }
+
     $(".edit-btn").click(function(){
         var department_id = $(this).data("id");
-        $("#editDepartmentErrors").addClass("d-none").html("");
+        clearEditDepartmentErrors();
+
+        var editValidator = $("#editDepartmentForm").data("validator");
+        if (editValidator) {
+            editValidator.resetForm();
+        }
 
         $.get("/departments/ajax/detail/" + department_id + "/", function(response){
             if(response.status === "success"){
@@ -149,6 +166,13 @@
 
     $("#editDepartmentForm").submit(function(e){
         e.preventDefault();
+
+        if (!$(this).valid()) {
+            return false;
+        }
+
+        clearEditDepartmentErrors();
+
         var department_id = $("#editDepartmentId").val();
 
         $.ajax({
@@ -159,51 +183,84 @@
                 if(response.status === "success"){
                     window.location.href = "{% url 'department_list' %}?success=updated";
                 } else {
-                    var errorHtml = "";
-                    $.each(response.errors || {}, function(field, messages){
-                        errorHtml += messages.join("<br>") + "<br>";
+                    $.each(response.errors || {}, function(field, messages) {
+                        if (field === "__all__") {
+                            $("#editDepartmentErrors").removeClass("d-none").html(messages.join("<br>"));
+                            return;
+                        }
+                        var input = $("#editDepartmentForm [name='" + field + "']");
+                        input.closest(".mb-3").find("div.text-danger").html(messages.join("<br>"));
                     });
-                    $("#editDepartmentErrors").removeClass("d-none").html(errorHtml);
                 }
             }
         });
     });
 
-    $(".delete-btn").click(function(){
-    
-        var department_id=$(this).data('id');
-    
-        var row=$(this).closest('tr');
-    
-        if(confirm("Delete Department?")){
-    
-            $.ajax({
-    
-                url:"/departments/ajax/delete/"+department_id+"/",
-    
-                type:"POST",
-    
-                data:{
-                    csrfmiddlewaretoken:'{{ csrf_token }}'
-                },
-    
-                success:function(response){
-    
-                    if(response.status=="success"){
-    
-                        departmentsTable.row(row).remove().draw(false);
-                        $("#successMessage").removeClass("d-none");
-                        $("#successMessage .message-text").text("Department deleted successfully.");
-    
+    $(".delete-btn").click(function () {
+
+        var department_id = $(this).data('id');
+        var row = $(this).closest('tr');
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You want to delete this department?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete'
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+
+                $.ajax({
+                    url: "/departments/ajax/delete/" + department_id + "/",
+                    type: "POST",
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+
+                    success: function (response) {
+
+                        if (response.status == "success") {
+
+                            departmentsTable.row(row).remove().draw(false);
+
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: 'Department deleted successfully.',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+
+                        } else {
+
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'Unable to delete department.',
+                                icon: 'error'
+                            });
+
+                        }
+                    },
+
+                    error: function () {
+
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Something went wrong.',
+                            icon: 'error'
+                        });
+
                     }
-    
-                }
-    
-            });
-    
-        }
-    
-    });
+                });
+
+            }
+
+        });
+
+        });
     
     </script>
 {% endblock %}

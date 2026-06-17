@@ -113,8 +113,10 @@
 <script>
     var skillsTable = $("#skillsTable").DataTable({
         pageLength: 10,
-        order: [[0, "desc"]]
+        order: [[0, "asc"]]
     });
+
+    console.log("DataTable rows:", skillsTable.rows().count());
 
     var skillModal = new bootstrap.Modal($("#editSkillModal")[0]);
 

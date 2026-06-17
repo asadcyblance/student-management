@@ -3,6 +3,11 @@ from io import BytesIO
 
 from django.core.files import File
 from django.core.files.base import ContentFile
+
+from django.core.files import File
+from django.core.files.base import ContentFile
+from io import BytesIO
+
 from PIL import Image
 
 

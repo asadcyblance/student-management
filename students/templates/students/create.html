@@ -185,6 +185,20 @@ Create Student
 
                 </div>
 
+                <!-- Profile Picture -->
+                <div class="col-md-12 mb-3">
+
+                    <label class="form-label d-block">
+                        Profile Picture
+                    </label>
+
+                    <div id="profileDropzone" class="dropzone"></div>
+                    <small class="text-muted">Image is stored temporarily until you save. Refreshing this page will clear it.</small>
+
+                    <input type="hidden" name="upload_token" value="{{ upload_token }}">
+
+                </div>
+
             </div>
 
             {% if form.non_field_errors %}
@@ -214,8 +228,40 @@ Create Student
 
 {% block js %}
 {% load static %}
+<link rel="stylesheet" href="{% static 'css/dropzone.min.css' %}">
+<script src="{% static 'js/dropzone.min.js' %}"></script>
 <script src="{% static 'js/student-formvalidation.js' %}"></script>
 <script>
+
+    Dropzone.autoDiscover = false;
+
+    var profileDropzone = new Dropzone("#profileDropzone", {
+        url: "{% url 'student_ajax_upload_temp_image' %}",
+        paramName: "profile_image",
+        maxFiles: 1,
+        acceptedFiles: "image/*",
+        addRemoveLinks: true,
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        params: {
+            upload_token: "{{ upload_token }}"
+        },
+        dictDefaultMessage: "Drop profile picture here or click to upload",
+        init: function() {
+            this.on("maxfilesexceeded", function(file) {
+                this.removeAllFiles();
+                this.addFile(file);
+            });
+
+            this.on("removedfile", function() {
+                $.post("{% url 'student_ajax_delete_temp_image' %}", {
+                    upload_token: "{{ upload_token }}",
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                });
+            });
+        }
+    });
 
     function clearStudentErrors() {
         $("#formErrors").addClass("d-none").html("");

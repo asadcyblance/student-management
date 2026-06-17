@@ -21,6 +21,19 @@ Student Details
         <table class="table table-bordered">
 
             <tr>
+                <th>Profile Picture</th>
+                <td>
+                    {% if student.profile_thumb %}
+                        <img src="{{ student.profile_thumb.url }}" alt="Profile Image">
+                    {% else %}
+                        <div class="profile-thumb-placeholder">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
                 <th>First Name</th>
                 <td>{{ student.first_name }}</td>
             </tr>

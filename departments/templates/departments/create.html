@@ -14,7 +14,7 @@ Create Department
 
     <div class="card-body">
 
-        <form method="post" id="departmentForm">
+        <form method="post" id="departmentForm" novalidate>
 
             {% csrf_token %}
 
@@ -90,46 +90,57 @@ Create Department
 {% endblock %}
 
 {% block js %}
+{% load static %}
+<script src="{% static 'js/department-formvalidation.js' %}"></script>
 <script>
 
     function clearDepartmentErrors() {
         $("#formErrors").addClass("d-none").html("");
-        $("#departmentForm .text-danger").html("");
+        $("#departmentForm div.text-danger").html("");
+        $("#departmentForm .is-invalid").removeClass("is-invalid");
     }
 
-    $("#departmentForm").submit(function(e){
+    $(document).ready(function() {
 
-        e.preventDefault();
-        clearDepartmentErrors();
+        $("#departmentForm").on("submit", function(e) {
 
-        $.ajax({
+            e.preventDefault();
 
-            url: "{% url 'department_ajax_create' %}",
+            if (!$("#departmentForm").valid()) {
+                return false;
+            }
 
-            type: "POST",
+            clearDepartmentErrors();
 
-            data: $(this).serialize(),
+            $.ajax({
 
-            success:function(response){
+                url: "{% url 'department_ajax_create' %}",
 
-                if(response.status == "success"){
+                type: "POST",
 
-                    window.location.href = "{% url 'department_list' %}?success=created";
+                data: $(this).serialize(),
 
-                } else {
-                    $.each(response.errors || {}, function(field, messages) {
-                        if (field === "__all__") {
-                            $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
-                            return;
-                        }
-                        var input = $("#departmentForm [name='" + field + "']");
-                        var wrapper = input.closest(".mb-3");
-                        wrapper.find(".text-danger").first().html(messages.join("<br>"));
-                    });
+                success: function(response) {
+
+                    if (response.status == "success") {
+
+                        window.location.href = "{% url 'department_list' %}?success=created";
+
+                    } else {
+                        $.each(response.errors || {}, function(field, messages) {
+                            if (field === "__all__") {
+                                $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
+                                return;
+                            }
+                            var input = $("#departmentForm [name='" + field + "']");
+                            var wrapper = input.closest(".mb-3");
+                            wrapper.find(".text-danger").first().html(messages.join("<br>"));
+                        });
+                    }
 
                 }
 
-            }
+            });
 
         });
 
@@ -137,3 +148,4 @@ Create Department
 
 </script>
 {% endblock %}
+

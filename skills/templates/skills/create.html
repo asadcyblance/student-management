@@ -14,7 +14,7 @@ Create Skill
 
     <div class="card-body">
 
-        <form method="post" id="skillForm">
+        <form method="post" id="skillForm" novalidate>
 
             {% csrf_token %}
 
@@ -76,46 +76,57 @@ Create Skill
 {% endblock %}
 
 {% block js %}
+{% load static %}
+<script src="{% static 'js/skill-formvalidation.js' %}"></script>
 <script>
 
     function clearSkillErrors() {
         $("#formErrors").addClass("d-none").html("");
-        $("#skillForm .text-danger").html("");
+        $("#skillForm div.text-danger").html("");
+        $("#skillForm .is-invalid").removeClass("is-invalid");
     }
 
-    $("#skillForm").submit(function(e){
+    $(document).ready(function() {
 
-        e.preventDefault();
-        clearSkillErrors();
+        $("#skillForm").on("submit", function(e) {
 
-        $.ajax({
+            e.preventDefault();
 
-            url: "{% url 'skill_ajax_create' %}",
+            if (!$(this).valid()) {
+                return false;
+            }
 
-            type: "POST",
+            clearSkillErrors();
 
-            data: $(this).serialize(),
+            $.ajax({
 
-            success:function(response){
+                url: "{% url 'skill_ajax_create' %}",
 
-                if(response.status == "success"){
+                type: "POST",
 
-                    window.location.href = "{% url 'skill_list' %}?success=created";
+                data: $(this).serialize(),
 
-                } else {
-                    $.each(response.errors || {}, function(field, messages) {
-                        if (field === "__all__") {
-                            $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
-                            return;
-                        }
-                        var input = $("#skillForm [name='" + field + "']");
-                        var wrapper = input.closest(".mb-3");
-                        wrapper.find(".text-danger").first().html(messages.join("<br>"));
-                    });
+                success:function(response){
+
+                    if(response.status == "success"){
+
+                        window.location.href = "{% url 'skill_list' %}?success=created";
+
+                    } else {
+                        $.each(response.errors || {}, function(field, messages) {
+                            if (field === "__all__") {
+                                $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
+                                return;
+                            }
+                            var input = $("#skillForm [name='" + field + "']");
+                            var wrapper = input.closest(".mb-3");
+                            wrapper.find("div.text-danger").html(messages.join("<br>"));
+                        });
+                    }
 
                 }
 
-            }
+            });
 
         });
 

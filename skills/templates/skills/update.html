@@ -27,6 +27,8 @@
 {% endblock %}
 
 {% block js %}
+{% load static %}
+<script src="{% static 'js/skill-formvalidation.js' %}"></script>
 <script>
 
     function clearSkillErrors() {

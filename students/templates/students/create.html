@@ -14,7 +14,7 @@ Create Student
 
     <div class="card-body">
 
-        <form method="post" id="studentForm">
+        <form method="post" id="studentForm" novalidate>
 
             {% csrf_token %}
 
@@ -228,6 +228,7 @@ Create Student
 
 {% block js %}
 {% load static %}
+<script src="{% static 'js/student-formvalidation.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/dropzone.min.css' %}">
 <script src="{% static 'js/dropzone.min.js' %}"></script>
 <script>
@@ -264,42 +265,51 @@ Create Student
 
     function clearStudentErrors() {
         $("#formErrors").addClass("d-none").html("");
-        $("#studentForm .text-danger").html("");
+        $("#studentForm div.text-danger").html("");
+        $("#studentForm .is-invalid").removeClass("is-invalid");
     }
 
-    $("#studentForm").submit(function(e){
+    $(document).ready(function() {
 
-        e.preventDefault();
-        clearStudentErrors();
+        $("#studentForm").on("submit", function(e) {
 
-        $.ajax({
+            e.preventDefault();
 
-            url: "{% url 'student_ajax_create' %}",
+            if (!$(this).valid()) {
+                return false;
+            }
 
-            type: "POST",
+            clearStudentErrors();
 
-            data: $(this).serialize(),
+            $.ajax({
 
-            success:function(response){
+                url: "{% url 'student_ajax_create' %}",
 
-                if(response.status == "success"){
+                type: "POST",
 
-                    window.location.href = "{% url 'student_list' %}?success=created";
+                data: $(this).serialize(),
 
-                } else {
-                    $.each(response.errors || {}, function(field, messages) {
-                        if (field === "__all__") {
-                            $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
-                            return;
-                        }
-                        var input = $("#studentForm [name='" + field + "']");
-                        var wrapper = input.closest(".mb-3");
-                        wrapper.find(".text-danger").first().html(messages.join("<br>"));
-                    });
+                success:function(response){
+
+                    if(response.status == "success"){
+
+                        window.location.href = "{% url 'student_list' %}?success=created";
+
+                    } else {
+                        $.each(response.errors || {}, function(field, messages) {
+                            if (field === "__all__") {
+                                $("#formErrors").removeClass("d-none").html(messages.join("<br>"));
+                                return;
+                            }
+                            var input = $("#studentForm [name='" + field + "']");
+                            var wrapper = input.closest(".mb-3");
+                            wrapper.find("div.text-danger").html(messages.join("<br>"));
+                        });
+                    }
 
                 }
 
-            }
+            });
 
         });
 

@@ -146,7 +146,7 @@
             </div>
             <div class="modal-body">
                 <div id="editStudentErrors" class="alert alert-danger d-none"></div>
-                <form id="editStudentForm">
+                <form id="editStudentForm" novalidate>
                     {% csrf_token %}
                     <input type="hidden" id="editStudentId">
 
@@ -160,56 +160,65 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">First Name</label>
+                            <label class="form-label">First Name *</label>
                             <input type="text" class="form-control" id="editFirstName" name="first_name">
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Last Name</label>
+                            <label class="form-label">Last Name *</label>
                             <input type="text" class="form-control" id="editLastName" name="last_name">
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Email</label>
+                            <label class="form-label">Email *</label>
                             <input type="email" class="form-control" id="editEmail" name="email">
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Mobile</label>
+                            <label class="form-label">Mobile *</label>
                             <input type="text" class="form-control" id="editMobile" name="mobile">
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Date of Birth</label>
+                            <label class="form-label">Date of Birth *</label>
                             <input type="date" class="form-control" id="editDob" name="dob">
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">City</label>
+                            <label class="form-label">City *</label>
                             <select class="form-select" id="editCity" name="city">
                                 {% for value, label in city_choices %}
                                     <option value="{{ value }}">{{ label }}</option>
                                 {% endfor %}
                             </select>
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label d-block">Gender</label>
+                            <label class="form-label d-block">Gender *</label>
                             {% for value, label in gender_choices %}
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input" type="radio" name="gender" value="{{ value }}" id="gender_{{ forloop.counter }}">
                                     <label class="form-check-label" for="gender_{{ forloop.counter }}">{{ label }}</label>
                                 </div>
                             {% endfor %}
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Department</label>
+                            <label class="form-label">Department *</label>
                             <select class="form-select" id="editDepartment" name="department">
                                 {% for department in departments %}
                                     <option value="{{ department.id }}">{{ department.name }}</option>
                                 {% endfor %}
                             </select>
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-12 mb-3">
-                            <label class="form-label">Address</label>
+                            <label class="form-label">Address *</label>
                             <textarea class="form-control" id="editAddress" name="address" rows="3"></textarea>
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-12 mb-3">
-                            <label class="form-label">Skills</label>
+                            <label class="form-label">Skills *</label>
                             <div>
                                 {% for skill in skills %}
                                     <div class="form-check form-check-inline">
@@ -218,6 +227,7 @@
                                     </div>
                                 {% endfor %}
                             </div>
+                            <div class="text-danger"></div>
                         </div>
                         <div class="col-md-12 mb-3">
                             <div class="form-check">
@@ -238,6 +248,8 @@
 
 {% block js %}
 {% load static %}
+<script src="{% static 'js/student-formvalidation.js' %}"></script>
+<script src="{% static 'js/sweetalert.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/dropzone.min.css' %}">
 <script src="{% static 'js/dropzone.min.js' %}"></script>
 <script>
@@ -331,9 +343,20 @@
         {% endif %}
     }
 
+    function clearEditStudentErrors() {
+        $("#editStudentErrors").addClass("d-none").html("");
+        $("#editStudentForm div.text-danger").html("");
+        $("#editStudentForm .is-invalid").removeClass("is-invalid");
+    }
+
     $(".edit-btn").click(function(){
         var student_id = $(this).data("id");
-        $("#editStudentErrors").addClass("d-none").html("");
+        clearEditStudentErrors();
+
+        var editValidator = $("#editStudentForm").data("validator");
+        if (editValidator) {
+            editValidator.resetForm();
+        }
 
         $.get("/students/ajax/detail/" + student_id + "/", function(response){
             if(response.status === "success"){
@@ -366,6 +389,13 @@
 
     $("#editStudentForm").submit(function(e){
         e.preventDefault();
+
+        if (!$(this).valid()) {
+            return false;
+        }
+
+        clearEditStudentErrors();
+
         var student_id = $("#editStudentId").val();
 
         $.ajax({
@@ -376,51 +406,89 @@
                 if(response.status === "success"){
                     window.location.href = "{% url 'student_list' %}?success=updated";
                 } else {
-                    var errorHtml = "";
-                    $.each(response.errors || {}, function(field, messages){
-                        errorHtml += messages.join("<br>") + "<br>";
+                    $.each(response.errors || {}, function(field, messages) {
+                        if (field === "__all__") {
+                            $("#editStudentErrors").removeClass("d-none").html(messages.join("<br>"));
+                            return;
+                        }
+                        var input = $("#editStudentForm [name='" + field + "']");
+                        input.closest(".mb-3").find("div.text-danger").html(messages.join("<br>"));
                     });
-                    $("#editStudentErrors").removeClass("d-none").html(errorHtml);
                 }
             }
         });
     });
 
-    $(".delete-btn").click(function(){
+    $(".delete-btn").click(function () {
 
         var student_id = $(this).data('id');
-
         var row = $(this).closest('tr');
 
-        if(confirm("Delete Student?")){
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You want to delete this student?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete'
+        }).then((result) => {
 
-            $.ajax({
+            if (result.isConfirmed) {
 
-                url: "/students/ajax/delete/" + student_id + "/",
+                $.ajax({
 
-                type: "POST",
+                    url: "/students/ajax/delete/" + student_id + "/",
 
-                data: {
-                    csrfmiddlewaretoken: "{{ csrf_token }}"
-                },
+                    type: "POST",
 
-                success: function(response){
+                    data: {
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
 
-                    if(response.status == "success"){
+                    success: function (response) {
 
-                        studentsTable.row(row).remove().draw(false);
-                        $("#successMessage").removeClass("d-none");
-                        $("#successMessage .message-text").text("Student deleted successfully.");
+                        if (response.status == "success") {
+
+                            studentsTable.row(row).remove().draw(false);
+
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: 'Student deleted successfully.',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+
+                        } else {
+
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'Unable to delete student.',
+                                icon: 'error'
+                            });
+
+                        }
+
+                    },
+
+                    error: function () {
+
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Something went wrong.',
+                            icon: 'error'
+                        });
 
                     }
 
-                }
+                });
 
-            });
+            }
 
-        }
+        });
 
-    });
+        });
 
     $(document).on("change", ".status-select", function(){
         var select = $(this);

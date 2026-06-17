@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 
 
 class CustomLoginForm(AuthenticationForm):
@@ -18,3 +18,24 @@ class CustomLoginForm(AuthenticationForm):
             'placeholder': 'Enter password',
         })
     )
+
+
+class CustomPasswordResetForm(PasswordResetForm):
+    email = forms.EmailField(
+        label='Email address',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email',
+            'autofocus': True,
+        }),
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+
+        if not any(self.get_users(email)):
+            raise forms.ValidationError(
+                'No email found in our system.'
+            )
+
+        return email

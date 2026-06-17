@@ -4,7 +4,7 @@
 
 <h2>Update Department</h2>
 
-<form method="post" id="departmentForm">
+<form method="post" id="departmentForm" novalidate>
 
     {% csrf_token %}
 
@@ -27,11 +27,13 @@
 {% endblock %}
 
 {% block js %}
-
+{% load static %}
+<script src="{% static 'js/department-formvalidation.js' %}"></script>
 <script>
     function clearDepartmentErrors() {
         $("#formErrors").addClass("d-none").html("");
-        $("#departmentForm .text-danger").html("");
+        $("#departmentForm div.text-danger").html("");
+        $("#departmentForm .is-invalid").removeClass("is-invalid");
     }
 
     function showDepartmentErrors(errors) {
@@ -53,6 +55,12 @@
         $('#departmentForm').submit(function(e) {
 
             e.preventDefault();
+
+            if(!$("#departmentForm").valid()){
+                return false;
+             }
+
+           clearDepartmentErrors();
 
             $.ajax({        
                 url: "{% url 'department_ajax_update' department.id %}",

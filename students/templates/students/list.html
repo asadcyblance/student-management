@@ -41,7 +41,6 @@
     <tr>
         <th>ID</th>
         <th>Profile Picture</th>
-        <th>Photo</th>
         <th>Name</th>
         <th>Email</th>
         <th>Department</th>
@@ -63,14 +62,11 @@
 
         <td>
             {% if student.profile_thumb %}
-                <img src="{{ student.profile_thumb.url }}" alt="Profile Picture">
+                <img src="{{ student.profile_thumb.url }}" alt="Profile Picture" class="rounded-circle" width="40" height="40">
             {% else %}
                 <div class="profile-thumb-placeholder">
                     <i class="bi bi-person-fill"></i>
                 </div>
-                <img src="{{ student.profile_thumb.url }}" alt="Profile" class="rounded-circle" width="40" height="40">
-            {% else %}
-                <span class="text-muted">—</span>
             {% endif %}
         </td>
 

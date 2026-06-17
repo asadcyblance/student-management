@@ -1,0 +1,67 @@
+/* Profile page only — PQINA circular avatar FilePond styles */
+
+.profile-filepond-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+
+.profile-filepond-wrapper .filepond--root {
+    width: 200px;
+    margin: 0 auto;
+    font-family: inherit;
+}
+
+.profile-filepond-wrapper .filepond--panel-root {
+    background-color: #ffffff;
+    border: 3px solid #dee2e6;
+    border-radius: 50%;
+}
+
+.profile-filepond-wrapper .filepond--drop-label {
+    color: #6c757d;
+    font-size: 0.7rem;
+    line-height: 1.3;
+}
+
+.profile-filepond-wrapper .filepond--drop-label label {
+    cursor: pointer;
+}
+
+.profile-filepond-wrapper .filepond--item-panel {
+    background-color: #ffffff;
+}
+
+.profile-filepond-wrapper .filepond--image-preview-wrapper {
+    border-radius: 50%;
+}
+
+.profile-filepond-wrapper .filepond--image-preview {
+    background: #ffffff;
+}
+
+.profile-filepond-wrapper [data-style-panel-layout~="circle"] .filepond--item-panel,
+.profile-filepond-wrapper [data-style-panel-layout~="circle"] .filepond--panel-root {
+    border-radius: 50%;
+}
+
+.profile-filepond-wrapper .filepond--file-action-button {
+    cursor: pointer;
+}
+
+.profile-filepond-wrapper .filepond--file-poster-wrapper,
+.profile-filepond-wrapper .filepond--file-poster {
+    border-radius: 50%;
+}
+
+.profile-filepond-wrapper [data-style-panel-layout~="circle"] .filepond--action-edit-item {
+    opacity: 1;
+}
+
+@media (max-width: 991.98px) {
+    .profile-filepond-wrapper .filepond--root {
+        width: 170px;
+    }
+}

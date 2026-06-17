@@ -25,14 +25,15 @@ Student Details
                 <td>
                     {% if student.profile_thumb %}
                         <img src="{{ student.profile_thumb.url }}" alt="Profile Image">
+                    {% elif student.profile_medium %}
+                        <img src="{{ student.profile_medium.url }}"
+                             alt="Profile"
+                             class="img-thumbnail"
+                             style="max-width: 200px;">
                     {% else %}
                         <div class="profile-thumb-placeholder">
                             <i class="bi bi-person-fill"></i>
                         </div>
-                    {% if student.profile_medium %}
-                        <img src="{{ student.profile_medium.url }}" alt="Profile" class="img-thumbnail" style="max-width: 200px;">
-                    {% else %}
-                        No photo
                     {% endif %}
                 </td>
             </tr>

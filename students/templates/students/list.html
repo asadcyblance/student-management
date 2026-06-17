@@ -40,6 +40,7 @@
 
     <tr>
         <th>ID</th>
+        <th>Photo</th>
         <th>Name</th>
         <th>Email</th>
         <th>Department</th>
@@ -58,6 +59,14 @@
     <tr>
 
         <td>{{ student.id }}</td>
+
+        <td>
+            {% if student.profile_thumb %}
+                <img src="{{ student.profile_thumb.url }}" alt="Profile" class="rounded-circle" width="40" height="40">
+            {% else %}
+                <span class="text-muted">—</span>
+            {% endif %}
+        </td>
 
         <td>
             {{ student.first_name }}
@@ -140,6 +149,14 @@
                 <form id="editStudentForm" novalidate>
                     {% csrf_token %}
                     <input type="hidden" id="editStudentId">
+
+                    {% if perms.students.change_student %}
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label d-block">Profile Picture</label>
+                        <div id="editProfileDropzone" class="dropzone"></div>
+                        <small class="text-muted">Upload saves immediately. Refresh will keep the saved image.</small>
+                    </div>
+                    {% endif %}
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -233,13 +250,98 @@
 {% load static %}
 <script src="{% static 'js/student-formvalidation.js' %}"></script>
 <script src="{% static 'js/sweetalert.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/dropzone.min.css' %}">
+<script src="{% static 'js/dropzone.min.js' %}"></script>
 <script>
+    Dropzone.autoDiscover = false;
+
     var studentsTable = $("#studentsTable").DataTable({
         pageLength: 10,
-        order: [[0, "desc"]]
+        order: [[0, "asc"]]
     });
 
     var studentModal = new bootstrap.Modal($("#editStudentModal")[0]);
+    var editProfileDropzone = null;
+    var suppressProfileDelete = false;
+
+    function resetEditDropzoneElement() {
+        var dropzoneEl = document.getElementById("editProfileDropzone");
+        if (dropzoneEl) {
+            dropzoneEl.classList.remove("dz-started");
+            dropzoneEl.innerHTML = "";
+        }
+    }
+
+    function destroyEditDropzone() {
+        var dropzoneEl = document.getElementById("editProfileDropzone");
+        var instance = editProfileDropzone || (dropzoneEl && dropzoneEl.dropzone);
+
+        if (instance) {
+            suppressProfileDelete = true;
+            instance.off("removedfile");
+            instance.removeAllFiles(true);
+            instance.destroy();
+            editProfileDropzone = null;
+            suppressProfileDelete = false;
+        }
+
+        resetEditDropzoneElement();
+    }
+
+    function showExistingProfilePhoto(dropzone, thumbUrl) {
+        var mockFile = { name: "Current Photo", size: 12345 };
+        var autoProcessQueue = dropzone.options.autoProcessQueue;
+
+        dropzone.options.autoProcessQueue = false;
+        dropzone.emit("addedfile", mockFile);
+        dropzone.emit("thumbnail", mockFile, thumbUrl);
+        dropzone.emit("complete", mockFile);
+        mockFile.status = Dropzone.SUCCESS;
+        mockFile.accepted = true;
+        dropzone.files.push(mockFile);
+        dropzone.options.autoProcessQueue = autoProcessQueue;
+    }
+
+    function initEditDropzone(studentId, thumbUrl) {
+        destroyEditDropzone();
+
+        {% if perms.students.change_student %}
+        editProfileDropzone = new Dropzone("#editProfileDropzone", {
+            url: "/students/ajax/upload-profile/" + studentId + "/",
+            paramName: "profile_image",
+            maxFiles: 1,
+            acceptedFiles: "image/*",
+            addRemoveLinks: true,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            dictDefaultMessage: "Drop profile picture here or click to upload",
+            init: function() {
+                var dropzone = this;
+
+                this.on("maxfilesexceeded", function(file) {
+                    suppressProfileDelete = true;
+                    dropzone.removeAllFiles();
+                    suppressProfileDelete = false;
+                    dropzone.addFile(file);
+                });
+
+                if (thumbUrl) {
+                    showExistingProfilePhoto(dropzone, thumbUrl);
+                }
+
+                this.on("removedfile", function() {
+                    if (suppressProfileDelete) {
+                        return;
+                    }
+                    $.post("/students/ajax/delete-profile/" + studentId + "/", {
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    });
+                });
+            }
+        });
+        {% endif %}
+    }
 
     function clearEditStudentErrors() {
         $("#editStudentErrors").addClass("d-none").html("");
@@ -275,9 +377,14 @@
                     $(".edit-skill[value='" + skillId + "']").prop("checked", true);
                 });
 
+                initEditDropzone(response.id, response.thumb);
                 studentModal.show();
             }
         });
+    });
+
+    $("#editStudentModal").on("hidden.bs.modal", function() {
+        destroyEditDropzone();
     });
 
     $("#editStudentForm").submit(function(e){

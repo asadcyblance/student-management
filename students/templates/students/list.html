@@ -40,6 +40,7 @@
 
     <tr>
         <th>ID</th>
+        <th>Profile Picture</th>
         <th>Photo</th>
         <th>Name</th>
         <th>Email</th>
@@ -62,6 +63,11 @@
 
         <td>
             {% if student.profile_thumb %}
+                <img src="{{ student.profile_thumb.url }}" alt="Profile Picture">
+            {% else %}
+                <div class="profile-thumb-placeholder">
+                    <i class="bi bi-person-fill"></i>
+                </div>
                 <img src="{{ student.profile_thumb.url }}" alt="Profile" class="rounded-circle" width="40" height="40">
             {% else %}
                 <span class="text-muted">—</span>
@@ -248,6 +254,8 @@
 
 {% block js %}
 {% load static %}
+<link rel="stylesheet" href="{% static 'css/dropzone.min.css' %}">
+<script src="{% static 'js/dropzone.min.js' %}"></script>
 <script src="{% static 'js/student-formvalidation.js' %}"></script>
 <script src="{% static 'js/sweetalert.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/dropzone.min.css' %}">
@@ -347,6 +355,84 @@
         $("#editStudentErrors").addClass("d-none").html("");
         $("#editStudentForm div.text-danger").html("");
         $("#editStudentForm .is-invalid").removeClass("is-invalid");
+    }
+
+    function resetEditDropzoneElement() {
+        var dropzoneEl = document.getElementById("editProfileDropzone");
+        if (dropzoneEl) {
+            dropzoneEl.classList.remove("dz-started");
+            dropzoneEl.innerHTML = "";
+        }
+    }
+
+    function destroyEditDropzone() {
+        var dropzoneEl = document.getElementById("editProfileDropzone");
+        var instance = editProfileDropzone || (dropzoneEl && dropzoneEl.dropzone);
+
+        if (instance) {
+            suppressProfileDelete = true;
+            instance.off("removedfile");
+            instance.removeAllFiles(true);
+            instance.destroy();
+            editProfileDropzone = null;
+            suppressProfileDelete = false;
+        }
+
+        resetEditDropzoneElement();
+    }
+
+    function showExistingProfilePhoto(dropzone, thumbUrl) {
+        if (!thumbUrl) {
+            return;
+        }
+
+        var mockFile = { name: "Current Photo", size: 12345 };
+        var wasAutoProcess = dropzone.options.autoProcessQueue;
+        dropzone.options.autoProcessQueue = false;
+        dropzone.displayExistingFile(mockFile, thumbUrl);
+        mockFile.status = Dropzone.SUCCESS;
+        mockFile.accepted = true;
+        dropzone.emit("complete", mockFile);
+        dropzone.options.autoProcessQueue = wasAutoProcess;
+    }
+
+    function initEditDropzone(studentId, thumbUrl) {
+        destroyEditDropzone();
+
+        {% if perms.students.change_student %}
+        editProfileDropzone = new Dropzone("#editProfileDropzone", {
+            url: "/students/ajax/upload-profile/" + studentId + "/",
+            paramName: "profile_image",
+            maxFiles: 1,
+            acceptedFiles: "image/*",
+            addRemoveLinks: true,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            dictDefaultMessage: "Drop profile picture here or click to upload",
+            init: function() {
+                var dropzone = this;
+
+                this.on("maxfilesexceeded", function(file) {
+                    suppressProfileDelete = true;
+                    dropzone.removeAllFiles();
+                    suppressProfileDelete = false;
+                    dropzone.addFile(file);
+                });
+
+                showExistingProfilePhoto(dropzone, thumbUrl);
+
+                this.on("removedfile", function() {
+                    if (suppressProfileDelete) {
+                        return;
+                    }
+                    $.post("/students/ajax/delete-profile/" + studentId + "/", {
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    });
+                });
+            }
+        });
+        {% endif %}
     }
 
     $(".edit-btn").click(function(){

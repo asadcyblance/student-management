@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block extra_css %}
+{% load static %}
+<link href="{% static 'css/filepond.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="mb-0">Profile Image</h3>
+            </div>
+            <div class="card-body text-center">
+                {% if request.user.profile.profile_thumb %}
+                    <img src="{{ request.user.profile.profile_thumb.url }}" class="profile-thumb-preview mb-3" alt="Profile Thumb">
+                {% else %}
+                    <div class="profile-thumb-preview profile-thumb-placeholder mb-3">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="mb-0">My Profile</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="profile">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Username</label>
+                            {{ user_form.username }}
+                            <div class="text-danger">{{ user_form.username.errors }}</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            {{ user_form.email }}
+                            <div class="text-danger">{{ user_form.email.errors }}</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name</label>
+                            {{ user_form.first_name }}
+                            <div class="text-danger">{{ user_form.first_name.errors }}</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name</label>
+                            {{ user_form.last_name }}
+                            <div class="text-danger">{{ user_form.last_name.errors }}</div>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Upload Profile Image</label>
+                            {{ profile_form.profile_image }}
+                            <div class="text-danger">{{ profile_form.profile_image.errors }}</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="mb-0">Change Password</h3>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="password">
+
+            <div class="mb-3">
+                <label class="form-label">Current Password</label>
+                {{ password_form.old_password }}
+                <div class="text-danger">{{ password_form.old_password.errors }}</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">New Password</label>
+                {{ password_form.new_password1 }}
+                <div class="text-danger">{{ password_form.new_password1.errors }}</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Confirm New Password</label>
+                {{ password_form.new_password2 }}
+                <div class="text-danger">{{ password_form.new_password2.errors }}</div>
+            </div>
+
+            {% if password_form.non_field_errors %}
+                <div class="alert alert-danger">{{ password_form.non_field_errors }}</div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-warning">Change Password</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+{% load static %}
+<script src="{% static 'js/filepond.js' %}"></script>
+<script>
+$(document).ready(function() {
+    var profileInput = $("input.filepond")[0];
+    if (!profileInput) {
+        return;
+    }
+
+    var csrfToken = "{{ csrf_token }}";
+    var existingProfileImage = "{{ filepond_initial_file|escapejs }}";
+    var pondOptions = {
+        name: 'profile_image',
+        storeAsFile: false,
+        allowMultiple: false,
+        credits: false,
+        server: {
+            process: {
+                url: "{% url 'profile_image_upload' %}",
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+            },
+            revert: {
+                url: "{% url 'profile_image_delete' %}",
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+            },
+            remove: function(source, load, error) {
+                $.ajax({
+                    url: "{% url 'profile_image_delete' %}",
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                    },
+                    success: function() {
+                        load();
+                        window.location.reload();
+                    },
+                    error: function() {
+                        error('Unable to remove image.');
+                    }
+                });
+            },
+            load: function(source, load, error, progress, abort) {
+                var request = $.ajax({
+                    url: "{% url 'profile_image_load' %}",
+                    type: 'GET',
+                    xhr: function() {
+                        var xhr = $.ajaxSettings.xhr();
+                        if (xhr.responseType !== undefined) {
+                            xhr.responseType = 'blob';
+                        }
+                        return xhr;
+                    },
+                    success: function(blob) {
+                        load(blob);
+                    },
+                    error: function() {
+                        error('Unable to load image.');
+                    }
+                });
+
+                return {
+                    abort: function() {
+                        request.abort();
+                        abort();
+                    }
+                };
+            },
+        },
+    };
+
+    if (existingProfileImage) {
+        pondOptions.files = [
+            {
+                source: "current-profile-image",
+                options: {
+                    type: 'local',
+                },
+            },
+        ];
+    }
+
+    var pond = FilePond.create(profileInput, pondOptions);
+    pond.on('processfile', function(error) {
+        if (!error) {
+            window.location.reload();
+        }
+    });
+});
+</script>
+{% endblock %}

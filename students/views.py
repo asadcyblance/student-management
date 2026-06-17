@@ -1,6 +1,8 @@
 import uuid
 
 from django.contrib.auth.decorators import login_required, permission_required
+
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 
@@ -13,8 +15,66 @@ from .utils import (
     save_profile_images,
 )
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+
 from departments.models import Department
 from skills.models import Skill
+
+from .forms import StudentForm
+from .models import Student, StudentTempImage
+from .utils import (
+    attach_temp_image_to_student,
+    delete_profile_images,
+    profile_image_urls,
+    save_profile_images,
+)
+
+
+def _clear_temp_upload(request):
+    token = request.session.get('student_upload_token')
+
+    if token:
+        StudentTempImage.objects.filter(upload_token=token).delete()
+
+    request.session.pop('student_upload_token', None)
+
+
+def _validate_image_upload(request):
+    image_file = request.FILES.get('profile_image')
+
+    if not image_file:
+        return None, JsonResponse({
+            'status': 'error',
+            'message': 'No image file provided.',
+        })
+
+    if not image_file.content_type.startswith('image/'):
+        return None, JsonResponse({
+            'status': 'error',
+            'message': 'Only image files are allowed.',
+        })
+
+    return image_file, None
+
+
+def _student_detail_payload(student):
+    payload = {
+        'status': 'success',
+        'id': student.id,
+        'first_name': student.first_name,
+        'last_name': student.last_name,
+        'email': student.email,
+        'mobile': student.mobile,
+        'dob': student.dob.strftime('%Y-%m-%d'),
+        'gender': student.gender,
+        'address': student.address,
+        'city': student.city,
+        'department': student.department_id,
+        'skills': list(student.skills.values_list('id', flat=True)),
+        'is_active': student.is_active,
+    }
+    payload.update(profile_image_urls(student))
+    return payload
 
 
 def _clear_temp_upload(request):
